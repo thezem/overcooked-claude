@@ -1,50 +1,31 @@
-# 🍣 Overcooked Agents — *Agent Kitchen*
+# 🍣 Agent Kitchen — Overcooked for Claude Code
 
-**A live, Overcooked-style 3D kitchen that shows what every Claude Code agent on your machine is doing.** (Fork of [patniko/overcooked-agents](https://github.com/patniko/overcooked-agents): the kitchen is theirs, the data layer here reads Claude Code.)
+**A live, Overcooked-style 3D kitchen that shows what every Claude Code agent on your machine is doing.**
 
 Every Claude Code session becomes a **chef**. Every prompt you send becomes an **order ticket**. As the agent reads code, edits files, builds, runs tests, commits and pushes, its chef dashes between kitchen stations — grabbing nori, chopping fish, cooking rice, frying tempura, plating sushi and sending it out through the serving hatch. Failed builds and tests set stations on **fire** 🔥, sub-agents show up as **sous-chefs**, and every served order earns **coins**.
 
 ![A busy shift: four chefs cooking, a fire at the tempura fryer, order tickets along the top](docs/screenshots/hero.png)
 
 - **Zero install.** Plain Node.js (≥ 20), no `npm install`, no build step. three.js is vendored.
-- **Watches all local Copilot activity** — the Copilot CLI, the GitHub Copilot app and SDK clients all write to `~/.copilot/session-state`, and the kitchen tails every session live.
-- **Read-only and local.** It never writes to your Copilot folder, and the server only listens on `127.0.0.1`.
+- **Watches all local Claude Code activity** — terminal sessions, the desktop app and SDK clients all write transcripts to `~/.claude/projects`, and the kitchen tails every session live.
+- **Read-only and local.** It never writes to your Claude folder, and the server only listens on `127.0.0.1`.
 - **Demo shift** built in, so you can see it in action without any agents running.
 
-> **What counts as "Copilot activity"?** Everything that runs through the Copilot agent runtime on this machine: the GitHub Copilot app, Copilot CLI sessions in any terminal, and SDK-based agents — they all record their sessions in `~/.copilot/session-state`. Copilot Chat inside VS Code keeps its history elsewhere and isn't shown yet, and cloud agents run on GitHub's machines rather than yours.
+> **What counts as "Claude Code activity"?** Every session that runs on this machine: Claude Code in a terminal, the desktop app and Agent SDK clients all record transcripts under `~/.claude/projects`, and running processes register themselves in `~/.claude/sessions`. Sessions that run on Anthropic's machines (cloud sessions) leave nothing local, so they aren't shown.
 
 > Inspired by the *Overcooked!* games (Ghost Town Games / Team17). This is an unofficial fan-made tribute: all art is original and generated procedurally in code — no game assets are used.
 
 ---
 
-## Claude Code adapter (this fork)
-
-Reads `~/.claude/projects/**/<session>.jsonl` (plus `subagents/agent-*.jsonl`) and the live registry in `~/.claude/sessions/*.json`. Read-only, loopback-only.
-
-```
-npm start                       # Claude Code (default), opens http://127.0.0.1:7425
-node server/index.js --since 6h # count coins from the last 6 hours
-node server/index.js --source copilot   # original Copilot mode still works
-node scripts/e2e-claude.js      # fake ~/.claude + real server + real browser, screenshots in docs/e2e/
-```
-
-| File | Job |
-|---|---|
-| `server/claude-events.js` | transcript line → Copilot-shaped event (the normalizer, director and scene are unchanged) |
-| `server/claude-watcher.js` | discovery, tailing, sub-agent files, liveness via the session registry |
-| `scripts/e2e-claude.js` | end-to-end check |
-
-Mapping: `Read`→nori crate, `Grep/Glob`→fish crate, `Edit/Write`→chopping board, `Bash`→by command (`npm test`→fryer…), `Agent`→recipe book + a sous-chef from the sub-agent transcript, `is_error`/`Exit code N`→fire, `[Request interrupted by user]`→cancelled order, `end_turn`→served.
-
 ## Quick start
 
 ```sh
-git clone https://github.com/patniko/overcooked-agents
-cd overcooked-agents
+git clone https://github.com/thezem/overcooked-claude
+cd overcooked-claude
 npm start            # opens http://127.0.0.1:7425 in your browser
 ```
 
-That's it. Leave it running in a corner of your screen (or on a second monitor) and work with Copilot as usual — chefs clock in as sessions start.
+That's it. Leave it running in a corner of your screen (or on a second monitor) and work with Claude Code as usual — chefs clock in as sessions start.
 
 | Command | What it does |
 |---|---|
@@ -53,6 +34,7 @@ That's it. Leave it running in a corner of your screen (or on a second monitor) 
 | `npm run demo` | Start the server and open a simulated **demo shift** |
 | `npm test` | Run the test suite (unit + integration, no dependencies) |
 | `npm run screenshots` | Regenerate the screenshots in `docs/screenshots` |
+| `node scripts/e2e-claude.js` | End-to-end check: a fake `~/.claude`, the real server and a real browser; screenshots land in `docs/e2e/` |
 
 No server? Serve the `public/` folder from any static web server and add `?demo` — demo mode runs entirely in the browser.
 
@@ -80,6 +62,20 @@ Just like a sushi order — grab nori, cook rice, cut fish, plate it, ship it �
 | 🔔 | **Order Bell** | Ask the user | `ask_user`, permission prompts — the chef waits with a **?** |
 
 Shell commands are classified by parsing each segment of the command line (`a && b; c | d`), so `npm install && npm test` goes to the fryer and `git add -A && git commit && git push` goes to the serving hatch — the "furthest along" step wins. The full catalog lives in [`public/shared/stations.js`](public/shared/stations.js) and is covered by more than 100 tests.
+
+### Claude Code tools → stations
+
+| Claude Code | Station |
+|---|---|
+| `Read` | Nori Crate |
+| `Grep`, `Glob`, `LSP` | Fish Crate |
+| `Edit`, `Write`, `NotebookEdit` | Chopping Board |
+| `Bash` | by command: `npm test` → Fryer, `npm run build` → Rice Cooker, `git commit` → Plating Counter, `git push` → Serving Hatch, anything else → Prep Station |
+| `WebFetch`, `WebSearch`, MCP tools | Delivery Hatch (browser MCP tools → the Fryer, as taste-testing) |
+| `TodoWrite`, `Skill`, `ToolSearch`, `Agent` | Recipe Book (an `Agent` call also brings in a **sous-chef**) |
+| `AskUserQuestion` | Order Bell |
+
+A tool result with `is_error` (or a Bash `Exit code N`) at a build, test, lint, install, commit or push station sets it on fire. An assistant turn that ends (`end_turn`) serves the order; `[Request interrupted by user]` cancels it.
 
 ### Order tickets
 
@@ -125,7 +121,7 @@ When an agent delegates to a sub-agent (the `task` tool — explore, research, c
 
 ### Privacy mode
 
-Prompts can contain anything. Turn on **Hide prompts** (or add `?privacy=1`) before sharing your screen: prompt text, session names (Copilot often names sessions after your first prompt), file names, branches and chatter are replaced with generic labels, while the kitchen keeps cooking.
+Prompts can contain anything. Turn on **Hide prompts** (or add `?privacy=1`) before sharing your screen: prompt text, session names (Claude Code often titles sessions after your first prompt), file names, branches and chatter are replaced with generic labels, while the kitchen keeps cooking.
 
 ![Privacy mode: tickets read "Order details hidden"](docs/screenshots/privacy.png)
 
@@ -144,8 +140,7 @@ node server/index.js [options]
   --host <addr>       Interface to bind (default 127.0.0.1; use 0.0.0.0 to share on your LAN)
   --open              Open the kitchen in your default browser
   --demo              Open the browser in demo mode (simulated agents)
-  --state-dir <dir>   Copilot session-state folder (default $COPILOT_HOME/session-state
-                      or ~/.copilot/session-state)
+  --claude-dir <dir>  Claude config folder (default $CLAUDE_CONFIG_DIR or ~/.claude)
   --since <when>      Count coins/orders since: today (default), all, 30m, 4h, 2d, or a date
   --recent <minutes>  Keep recently finished sessions in the roster this long (default 20)
   --poll <ms>         How often to check for new events (default 500)
@@ -166,7 +161,7 @@ Keyboard: `M` menu · `B` brigade · `Esc` close panels and deselect.
 
 ## Privacy & security
 
-- The server reads `~/.copilot/session-state/*/events.jsonl` and `workspace.yaml` **read-only** and keeps everything in memory.
+- The server reads `~/.claude/projects/**/*.jsonl` (including `subagents/`) and `~/.claude/sessions/*.json` **read-only** and keeps everything in memory.
 - It binds to `127.0.0.1` by default, rejects requests whose `Host` header isn't local (DNS-rebinding protection), sends a strict Content-Security-Policy, and only serves files from `public/`.
 - Nothing is sent anywhere: the page loads no external resources.
 - If you bind to another interface with `--host`, anyone who can reach that port can see your prompts.
@@ -175,31 +170,32 @@ Keyboard: `M` menu · `B` brigade · `Esc` close panels and deselect.
 
 ```mermaid
 flowchart LR
-  A["Copilot CLI / Copilot app / SDK"] -->|append| B["~/.copilot/session-state/&lt;id&gt;/events.jsonl"]
-  B -->|tail every 500 ms| C["Watcher<br/>server/watcher.js"]
-  L["inuse.&lt;pid&gt;.lock"] -->|is the process alive?| C
-  C --> D["Normalizer<br/>public/shared/normalize.js"]
+  A["Claude Code: terminal / desktop app / SDK"] -->|append| B["~/.claude/projects/&lt;cwd&gt;/&lt;session&gt;.jsonl<br/>+ subagents/agent-*.jsonl"]
+  B -->|tail every 500 ms| C["Watcher<br/>server/claude-watcher.js"]
+  L["~/.claude/sessions/&lt;pid&gt;.json"] -->|is the process alive?| C
+  C --> T["Translator<br/>server/claude-events.js"]
+  T --> D["Normalizer<br/>public/shared/normalize.js"]
   D -->|snapshot + updates over SSE| E["Browser"]
   E --> F["Director<br/>chef behaviour"]
   F --> G["three.js kitchen"]
   E --> H["HUD: tickets, coins, brigade"]
 ```
 
-The normalizer turns raw events (`user.message`, `tool.execution_start/complete`, `subagent.started`, `abort`, …) into kitchen state and one-shot effects (order placed, tool started, fire, order served). The browser's **director** queues each chef's steps, walks them to the right station with A* pathfinding, and plays the matching animation for at least a moment, so quick steps stay visible without falling behind real time.
+The translator turns each transcript line (a prompt, an assistant `tool_use`, a `tool_result`, an interrupt, …) into a small event such as `user.message`, `tool.execution_start/complete`, `subagent.started` or `abort`. The normalizer turns those events into kitchen state and one-shot effects (order placed, tool started, fire, order served). The browser's **director** queues each chef's steps, walks them to the right station with A* pathfinding, and plays the matching animation for at least a moment, so quick steps stay visible without falling behind real time.
 
 See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** for the event model, station classification, chef state machine and how to extend the kitchen.
 
 ## Development
 
 ```text
-server/          Node server: CLI, session watcher, JSONL tailer, HTTP + SSE
+server/          Node server: CLI, Claude transcript watcher + translator, JSONL tailer, HTTP + SSE
 public/          The browser app (static; works from any web server in demo mode)
   shared/        Station catalog + event normalizer, shared by server and browser
   js/scene/      three.js: world, kitchen layout, stations, chefs, particles
   js/            Director, HUD, panels, demo shift, live connection
   vendor/        three.js (MIT), bundled
   fonts/         Fredoka (SIL OFL)
-scripts/         Headless screenshots via the Chrome DevTools Protocol
+scripts/         Headless screenshots via the Chrome DevTools Protocol, plus the Claude end-to-end check
 test/            node:test suites
 docs/            Architecture notes and screenshots
 ```
@@ -210,6 +206,7 @@ docs/            Architecture notes and screenshots
 
 ## Credits
 
+- Built on [patniko/overcooked-agents](https://github.com/patniko/overcooked-agents) (the kitchen, director and scene); this fork replaces its data layer with a Claude Code one.
 - Concept inspired by **Overcooked!** and **Overcooked! 2** by Ghost Town Games, published by Team17. Not affiliated with or endorsed by them.
 - [three.js](https://threejs.org) — MIT License.
 - [Fredoka](https://github.com/hafontia/Fredoka-One) font — SIL Open Font License 1.1.
