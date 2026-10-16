@@ -2,6 +2,8 @@
 
 **A live, Overcooked-style 3D kitchen that shows what every Claude Code agent on your machine is doing.**
 
+> **Credit where it's due:** this is a fork of [**patniko/overcooked-agents**](https://github.com/patniko/overcooked-agents) by [@patniko](https://github.com/patniko), which built the original Agent Kitchen for GitHub Copilot — the 3D kitchen, chefs, director and the whole idea are theirs. This fork swaps the data layer so the same kitchen runs on Claude Code sessions.
+
 Every Claude Code session becomes a **chef**. Every prompt you send becomes an **order ticket**. As the agent reads code, edits files, builds, runs tests, commits and pushes, its chef dashes between kitchen stations — grabbing nori, chopping fish, cooking rice, frying tempura, plating sushi and sending it out through the serving hatch. Failed builds and tests set stations on **fire** 🔥, sub-agents show up as **sous-chefs**, and every served order earns **coins**.
 
 ![A busy shift: four chefs cooking, a fire at the tempura fryer, order tickets along the top](docs/screenshots/hero.png)
