@@ -1,8 +1,8 @@
 # 🍣 Overcooked Agents — *Agent Kitchen*
 
-**A live, Overcooked-style 3D kitchen that shows what every GitHub Copilot agent on your machine is doing.**
+**A live, Overcooked-style 3D kitchen that shows what every Claude Code agent on your machine is doing.** (Fork of [patniko/overcooked-agents](https://github.com/patniko/overcooked-agents): the kitchen is theirs, the data layer here reads Claude Code.)
 
-Every Copilot session becomes a **chef**. Every prompt you send becomes an **order ticket**. As the agent reads code, edits files, builds, runs tests, commits and pushes, its chef dashes between kitchen stations — grabbing nori, chopping fish, cooking rice, frying tempura, plating sushi and sending it out through the serving hatch. Failed builds and tests set stations on **fire** 🔥, sub-agents show up as **sous-chefs**, and every served order earns **coins**.
+Every Claude Code session becomes a **chef**. Every prompt you send becomes an **order ticket**. As the agent reads code, edits files, builds, runs tests, commits and pushes, its chef dashes between kitchen stations — grabbing nori, chopping fish, cooking rice, frying tempura, plating sushi and sending it out through the serving hatch. Failed builds and tests set stations on **fire** 🔥, sub-agents show up as **sous-chefs**, and every served order earns **coins**.
 
 ![A busy shift: four chefs cooking, a fire at the tempura fryer, order tickets along the top](docs/screenshots/hero.png)
 
@@ -16,6 +16,25 @@ Every Copilot session becomes a **chef**. Every prompt you send becomes an **ord
 > Inspired by the *Overcooked!* games (Ghost Town Games / Team17). This is an unofficial fan-made tribute: all art is original and generated procedurally in code — no game assets are used.
 
 ---
+
+## Claude Code adapter (this fork)
+
+Reads `~/.claude/projects/**/<session>.jsonl` (plus `subagents/agent-*.jsonl`) and the live registry in `~/.claude/sessions/*.json`. Read-only, loopback-only.
+
+```
+npm start                       # Claude Code (default), opens http://127.0.0.1:7425
+node server/index.js --since 6h # count coins from the last 6 hours
+node server/index.js --source copilot   # original Copilot mode still works
+node scripts/e2e-claude.js      # fake ~/.claude + real server + real browser, screenshots in docs/e2e/
+```
+
+| File | Job |
+|---|---|
+| `server/claude-events.js` | transcript line → Copilot-shaped event (the normalizer, director and scene are unchanged) |
+| `server/claude-watcher.js` | discovery, tailing, sub-agent files, liveness via the session registry |
+| `scripts/e2e-claude.js` | end-to-end check |
+
+Mapping: `Read`→nori crate, `Grep/Glob`→fish crate, `Edit/Write`→chopping board, `Bash`→by command (`npm test`→fryer…), `Agent`→recipe book + a sous-chef from the sub-agent transcript, `is_error`/`Exit code N`→fire, `[Request interrupted by user]`→cancelled order, `end_turn`→served.
 
 ## Quick start
 

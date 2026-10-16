@@ -162,7 +162,7 @@ export class Panels {
     this.legend.innerHTML = `<div class="card">
       <button class="x" data-act="legend" aria-label="Close">×</button>
       <h2>${iconSvg('book', 28)} The Menu</h2>
-      <p class="lede">Every Copilot session on this machine is a <b>chef</b>. Each prompt you send is an <b>order ticket</b>.
+      <p class="lede">Every Claude Code session on this machine is a <b>chef</b>. Each prompt you send is an <b>order ticket</b>.
       Chefs run between stations as the agent works — the same way a sushi order needs nori, rice, fish, plating and serving.</p>
       <div class="menu-grid">${cards}</div>
       <div class="menu-extra">

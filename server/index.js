@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Agent Kitchen: an Overcooked-inspired live view of the Copilot agents on this machine.
+ * Agent Kitchen: an Overcooked-inspired live view of the agents on this machine.
  * Run `node server/index.js --help` for options.
  */
 import path from 'node:path';
 import { KitchenState } from '../public/shared/normalize.js';
 import { CopilotWatcher } from './watcher.js';
+import { ClaudeWatcher } from './claude-watcher.js';
 import { createKitchenServer } from './server.js';
-import { HELP, defaultStateDir, parseArgs, parseSince } from './config.js';
+import { HELP, defaultClaudeDir, defaultStateDir, parseArgs, parseSince } from './config.js';
 import { openBrowser } from './open.js';
 
 async function main() {
@@ -23,7 +24,8 @@ async function main() {
     return;
   }
 
-  const stateDir = path.resolve(opts.stateDir || defaultStateDir());
+  const claude = opts.source === 'claude';
+  const stateDir = path.resolve(claude ? opts.claudeDir || defaultClaudeDir() : opts.stateDir || defaultStateDir());
   let since;
   try {
     since = parseSince(opts.since);
@@ -32,7 +34,9 @@ async function main() {
     process.exit(2);
   }
   const kitchen = new KitchenState({ countFrom: since, recentMs: opts.recent * 60e3 });
-  const watcher = new CopilotWatcher({ stateDir, kitchen, since, pollMs: opts.poll });
+  const watcher = claude
+    ? new ClaudeWatcher({ claudeDir: stateDir, kitchen, since, pollMs: opts.poll })
+    : new CopilotWatcher({ stateDir, kitchen, since, pollMs: opts.poll });
   watcher.on('warn', (msg) => console.warn(`⚠️  ${msg}`));
   watcher.on('error', (err) => console.error('watcher error:', err?.message || err));
 
@@ -42,7 +46,7 @@ async function main() {
     kitchen,
     watcher,
     host: opts.host,
-    info: { mode: 'live', stateDir, since, version: '0.1.0' },
+    info: { mode: 'live', source: opts.source, stateDir, since, version: '0.1.0' },
   });
   server.on('handlerError', (err) => console.error('request error:', err?.message || err));
   server.on('error', (err) => {

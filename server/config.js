@@ -1,7 +1,7 @@
 import os from 'node:os';
 import path from 'node:path';
 
-export const HELP = `Agent Kitchen — an Overcooked-inspired live view of your Copilot agents
+export const HELP = `Agent Kitchen — an Overcooked-inspired live view of your Claude Code agents
 
 Usage: node server/index.js [options]
 
@@ -10,8 +10,10 @@ Options:
   --host <addr>       Interface to bind (default 127.0.0.1; use 0.0.0.0 to share on your LAN)
   --open              Open the kitchen in your default browser
   --demo              Open the browser in demo mode (simulated agents)
-  --state-dir <dir>   Copilot session-state folder (default $COPILOT_HOME/session-state
-                      or ~/.copilot/session-state)
+  --source <name>     claude (default) or copilot
+  --claude-dir <dir>  Claude config folder (default $CLAUDE_CONFIG_DIR or ~/.claude)
+  --state-dir <dir>   Copilot session-state folder, for --source copilot
+                      (default $COPILOT_HOME/session-state or ~/.copilot/session-state)
   --since <when>      Count coins/orders since: today (default), all, 30m, 4h, 2d, or a date
   --recent <minutes>  Keep recently finished sessions in the roster this long (default 20)
   --poll <ms>         How often to check for new events (default 500)
@@ -28,6 +30,8 @@ export function parseArgs(argv, env = process.env) {
     recent: 20,
     poll: 500,
     stateDir: null,
+    source: 'claude',
+    claudeDir: null,
     help: false,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -43,6 +47,8 @@ export function parseArgs(argv, env = process.env) {
       case '--open': opts.open = true; break;
       case '--demo': opts.demo = true; break;
       case '--state-dir': opts.stateDir = next(); break;
+      case '--source': opts.source = next(); break;
+      case '--claude-dir': opts.claudeDir = next(); break;
       case '--since': opts.since = next(); break;
       case '--recent': opts.recent = Number(next()); break;
       case '--poll': opts.poll = Number(next()); break;
@@ -50,6 +56,7 @@ export function parseArgs(argv, env = process.env) {
       default: throw new Error(`Unknown option: ${a}`);
     }
   }
+  if (!['claude', 'copilot'].includes(opts.source)) throw new Error('Invalid --source (claude or copilot)');
   if (!Number.isInteger(opts.port) || opts.port < 0 || opts.port > 65535) throw new Error('Invalid --port');
   if (!(opts.recent >= 0)) throw new Error('Invalid --recent');
   if (!(opts.poll >= 50)) throw new Error('Invalid --poll (minimum 50ms)');
@@ -77,4 +84,8 @@ export function parseSince(value, now = new Date()) {
 export function defaultStateDir(env = process.env) {
   const home = env.COPILOT_HOME || path.join(os.homedir(), '.copilot');
   return path.join(home, 'session-state');
+}
+
+export function defaultClaudeDir(env = process.env) {
+  return env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
 }

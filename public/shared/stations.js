@@ -471,7 +471,7 @@ export function classifyTool(toolName, args = {}) {
 
   let station = TOOL_MAP[lower];
   if (!station) {
-    if (/^computer-use-|playwright|^browser[_-]|screenshot/.test(lower)) station = 'test';
+    if (/^computer-use-|playwright|_browser_|browser_batch|javascript_tool|preview_start|^browser[_-]|screenshot/.test(lower)) station = 'test';
     else {
       const mcp = mcpParts(name);
       if (mcp) {

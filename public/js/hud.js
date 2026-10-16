@@ -19,7 +19,7 @@ const GEAR = '<svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-
 const TEMPLATE = `
   <div class="orders" aria-label="Order tickets"></div>
   <div class="brand">
-    <div class="logo" title="An Overcooked-inspired live view of your Copilot agents"><span class="logo-a">AGENT</span><span class="logo-b">KITCHEN</span></div>
+    <div class="logo" title="An Overcooked-inspired live view of your Claude Code agents"><span class="logo-a">AGENT</span><span class="logo-b">KITCHEN</span></div>
     <div class="conn"><i class="dot"></i><span class="conn-text">Connecting…</span></div>
     <div class="toolbar">
       <button class="btn" data-act="legend" title="What do the stations mean?">${iconSvg('book', 18)}<span>Menu</span></button>
@@ -190,9 +190,9 @@ export class Hud {
     const c = this.store.connection;
     let html = '';
     if (c === 'offline') {
-      html = `<div class="card"><h2>Can’t reach the kitchen</h2><p>Start the server with <code>npm start</code> (it watches <code>~/.copilot/session-state</code>), then reload.</p><a class="btn big" href="?demo">${iconSvg('hat', 22)}<span>Watch a demo shift</span></a></div>`;
+      html = `<div class="card"><h2>Can’t reach the kitchen</h2><p>Start the server with <code>npm start</code> (it watches <code>~/.claude/projects</code>), then reload.</p><a class="btn big" href="?demo">${iconSvg('hat', 22)}<span>Watch a demo shift</span></a></div>`;
     } else if (c === 'live' && active === 0) {
-      html = `<div class="card"><h2>The kitchen is quiet</h2><p>No Copilot sessions are cooking right now. Start one in the Copilot CLI or the GitHub Copilot app and a chef will clock in.</p><a class="btn big" href="?demo">${iconSvg('hat', 22)}<span>Watch a demo shift</span></a></div>`;
+      html = `<div class="card"><h2>The kitchen is quiet</h2><p>No Claude Code sessions are cooking right now. Start one in a terminal, the desktop app or the SDK and a chef will clock in.</p><a class="btn big" href="?demo">${iconSvg('hat', 22)}<span>Watch a demo shift</span></a></div>`;
     }
     if (this.emptyEl.dataset.html !== html) {
       this.emptyEl.innerHTML = html;
